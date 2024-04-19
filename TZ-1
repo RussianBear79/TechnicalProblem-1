@@ -1,0 +1,36 @@
+#!/bin/bash
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <source_directory> <destination_directory>"
+    exit 1
+fi
+
+src_dir=$1
+dest_dir=$2
+
+mkdir -p "$dest_dir"
+
+copy_and_rename() {
+    local src_path="$1"
+    local dest_path="$2"
+
+    find "$src_path" -type f -print0 | while IFS= read -r -d $'\0' file; do
+        filename=$(basename "$file")
+        
+        if [[ -e "$dest_path/$filename" ]]; then
+            base=${filename%.*}
+            ext=${filename##*.}
+            counter=1
+
+            while [[ -e "$dest_path/${base}_$counter.$ext" ]]; do
+                ((counter++))
+            done
+            filename="${base}_$counter.$ext"
+        fi
+
+        cp "$file" "$dest_path/$filename"
+    done
+}
+
+copy_and_rename "$src_dir" "$dest_dir"
+echo "succeed"
